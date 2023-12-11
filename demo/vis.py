@@ -89,7 +89,7 @@ def get_pose2D(video_path, output_dir):
     print('\nGenerating 2D pose...')
     keypoints, scores = hrnet_pose(video_path, det_dim=416, num_peroson=1, gen_output=True)
     keypoints, scores, valid_frames = h36m_coco_format(keypoints, scores)
-    
+
     # Add conf score to the last dim
     keypoints = np.concatenate((keypoints, scores[..., None]), axis=-1)
 
@@ -222,10 +222,13 @@ def get_pose3D(video_path, output_dir):
         os.makedirs(output_dir_2D, exist_ok=True)
         cv2.imwrite(output_dir_2D + str(('%04d'% i)) + '_2D.png', image)
 
+    model_outputs = list()
+
     joints_left =  [4, 5, 6, 11, 12, 13]
     joints_right = [1, 2, 3, 14, 15, 16]
 
     print('\nGenerating 3D pose...')
+
     for idx, clip in enumerate(clips):
         input_2D = normalize_screen_coordinates(clip, w=img_size[1], h=img_size[0]) 
 
@@ -246,25 +249,30 @@ def get_pose3D(video_path, output_dir):
         output_3D[:, :, 0, :] = 0
         post_out_all = output_3D[0].cpu().detach().numpy()
 
-        for j, post_out in enumerate(post_out_all):
-            rot =  [0.1407056450843811, -0.1500701755285263, -0.755240797996521, 0.6223280429840088]
-            rot = np.array(rot, dtype='float32')
-            post_out = camera_to_world(post_out, R=rot, t=0)
-            post_out[:, 2] -= np.min(post_out[:, 2])
-            max_value = np.max(post_out)
-            post_out /= max_value
+        model_outputs.append(post_out_all)
 
-            fig = plt.figure(figsize=(9.6, 5.4))
-            gs = gridspec.GridSpec(1, 1)
-            gs.update(wspace=-0.00, hspace=0.05) 
-            ax = plt.subplot(gs[0], projection='3d')
-            show3Dpose(post_out, ax)
+        # for j, post_out in enumerate(post_out_all):
+        #     rot =  [0.1407056450843811, -0.1500701755285263, -0.755240797996521, 0.6223280429840088]
+        #     rot = np.array(rot, dtype='float32')
+        #     post_out = camera_to_world(post_out, R=rot, t=0)
+        #     post_out[:, 2] -= np.min(post_out[:, 2])
+        #     max_value = np.max(post_out)
+        #     post_out /= max_value
 
-            output_dir_3D = output_dir +'pose3D/'
-            os.makedirs(output_dir_3D, exist_ok=True)
-            str(('%04d'% (idx * 243 + j)))
-            plt.savefig(output_dir_3D + str(('%04d'% (idx * 243 + j))) + '_3D.png', dpi=200, format='png', bbox_inches='tight')
-            plt.close(fig)
+        #     fig = plt.figure(figsize=(9.6, 5.4))
+        #     gs = gridspec.GridSpec(1, 1)
+        #     gs.update(wspace=-0.00, hspace=0.05) 
+        #     ax = plt.subplot(gs[0], projection='3d')
+        #     show3Dpose(post_out, ax)
+
+        #     output_dir_3D = output_dir +'pose3D/'
+        #     os.makedirs(output_dir_3D, exist_ok=True)
+        #     str(('%04d'% (idx * 243 + j)))
+        #     plt.savefig(output_dir_3D + str(('%04d'% (idx * 243 + j))) + '_3D.png', dpi=200, format='png', bbox_inches='tight')
+        #     plt.close(fig)
+
+    output_file = os.path.join(output_dir, 'MotionAGFormer_output.npz')
+    np.savez_compressed(output_file, model_outputs=model_outputs)
 
     print('Generating 3D pose successful!')
 
@@ -308,7 +316,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--video', type=str, default='sample_video.mp4', help='input video')
     parser.add_argument('--gpu', type=str, default='0', help='input video')
-    parser.add_argument('--visualize', type=bool, default=False)
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -319,8 +326,6 @@ if __name__ == "__main__":
 
     get_pose2D(video_path, output_dir)
     get_pose3D(video_path, output_dir)
-
-    if args.visualize:
-        img2video(video_path, output_dir)
+    # img2video(video_path, output_dir)
 
     print('Generating demo successful!')
