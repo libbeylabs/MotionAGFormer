@@ -152,6 +152,7 @@ def turn_into_clips(keypoints):
                 clips.append(keypoints_clip)
     return clips, downsample
 
+
 def turn_into_h36m(keypoints):
     new_keypoints = np.zeros_like(keypoints)
     new_keypoints[..., 0, :] = (keypoints[..., 11, :] + keypoints[..., 12, :]) * 0.5
@@ -196,7 +197,6 @@ def get_pose3D(video_path, output_dir):
 
     pre_dict = torch.load(model_path)
     model.load_state_dict(pre_dict['model'], strict=True)
-
     model.eval()
 
     ## input
@@ -222,9 +222,9 @@ def get_pose3D(video_path, output_dir):
         os.makedirs(output_dir_2D, exist_ok=True)
         cv2.imwrite(output_dir_2D + str(('%04d'% i)) + '_2D.png', image)
 
-    
     joints_left =  [4, 5, 6, 11, 12, 13]
     joints_right = [1, 2, 3, 14, 15, 16]
+
     print('\nGenerating 3D pose...')
     for idx, clip in enumerate(clips):
         input_2D = normalize_screen_coordinates(clip, w=img_size[1], h=img_size[0]) 
@@ -245,7 +245,7 @@ def get_pose3D(video_path, output_dir):
 
         output_3D[:, :, 0, :] = 0
         post_out_all = output_3D[0].cpu().detach().numpy()
-        
+
         for j, post_out in enumerate(post_out_all):
             rot =  [0.1407056450843811, -0.1500701755285263, -0.755240797996521, 0.6223280429840088]
             rot = np.array(rot, dtype='float32')
@@ -269,39 +269,39 @@ def get_pose3D(video_path, output_dir):
     print('Generating 3D pose successful!')
 
     ## all
-    image_2d_dir = sorted(glob.glob(os.path.join(output_dir_2D, '*.png')))
-    image_3d_dir = sorted(glob.glob(os.path.join(output_dir_3D, '*.png')))
+    # image_2d_dir = sorted(glob.glob(os.path.join(output_dir_2D, '*.png')))
+    # image_3d_dir = sorted(glob.glob(os.path.join(output_dir_3D, '*.png')))
 
-    print('\nGenerating demo...')
-    for i in tqdm(range(len(image_2d_dir))):
-        image_2d = plt.imread(image_2d_dir[i])
-        image_3d = plt.imread(image_3d_dir[i])
+    # print('\nGenerating demo...')
+    # for i in tqdm(range(len(image_2d_dir))):
+    #     image_2d = plt.imread(image_2d_dir[i])
+    #     image_3d = plt.imread(image_3d_dir[i])
 
-        ## crop
-        edge = (image_2d.shape[1] - image_2d.shape[0]) // 2
-        image_2d = image_2d[:, edge:image_2d.shape[1] - edge]
+    #     ## crop
+    #     edge = (image_2d.shape[1] - image_2d.shape[0]) // 2
+    #     image_2d = image_2d[:, edge:image_2d.shape[1] - edge]
 
-        edge = 130
-        image_3d = image_3d[edge:image_3d.shape[0] - edge, edge:image_3d.shape[1] - edge]
+    #     edge = 130
+    #     image_3d = image_3d[edge:image_3d.shape[0] - edge, edge:image_3d.shape[1] - edge]
 
-        ## show
-        font_size = 12
-        fig = plt.figure(figsize=(15.0, 5.4))
-        ax = plt.subplot(121)
-        showimage(ax, image_2d)
-        ax.set_title("Input", fontsize = font_size)
+    #     ## show
+    #     font_size = 12
+    #     fig = plt.figure(figsize=(15.0, 5.4))
+    #     ax = plt.subplot(121)
+    #     showimage(ax, image_2d)
+    #     ax.set_title("Input", fontsize = font_size)
 
-        ax = plt.subplot(122)
-        showimage(ax, image_3d)
-        ax.set_title("Reconstruction", fontsize = font_size)
+    #     ax = plt.subplot(122)
+    #     showimage(ax, image_3d)
+    #     ax.set_title("Reconstruction", fontsize = font_size)
 
-        ## save
-        output_dir_pose = output_dir +'pose/'
-        os.makedirs(output_dir_pose, exist_ok=True)
-        plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
-        plt.margins(0, 0)
-        plt.savefig(output_dir_pose + str(('%04d'% i)) + '_pose.png', dpi=200, bbox_inches = 'tight')
-        plt.close(fig)
+    #     ## save
+    #     output_dir_pose = output_dir +'pose/'
+    #     os.makedirs(output_dir_pose, exist_ok=True)
+    #     plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+    #     plt.margins(0, 0)
+    #     plt.savefig(output_dir_pose + str(('%04d'% i)) + '_pose.png', dpi=200, bbox_inches = 'tight')
+    #     plt.close(fig)
 
 
 if __name__ == "__main__":
