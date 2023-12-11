@@ -16,7 +16,7 @@ from demo.lib.utils import normalize_screen_coordinates, camera_to_world
 from model.MotionAGFormer import MotionAGFormer
 
 import matplotlib
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.gridspec as gridspec
 
@@ -175,7 +175,6 @@ def turn_into_h36m(keypoints):
     return new_keypoints
 
 
-
 def get_pose3D(video_path, output_dir):
     args, _ = argparse.ArgumentParser().parse_known_args()
     args.n_layers, args.dim_in, args.dim_feat, args.dim_rep, args.dim_out = 16, 3, 128, 512, 3
@@ -202,14 +201,7 @@ def get_pose3D(video_path, output_dir):
 
     ## input
     keypoints = np.load(output_dir + 'input_2D/keypoints.npz', allow_pickle=True)['reconstruction']
-    # keypoints = np.load('demo/lakeside3.npy')
-    # keypoints = keypoints[:240]
-    # keypoints = keypoints[None, ...]
-    # keypoints = turn_into_h36m(keypoints)
-    
-
     clips, downsample = turn_into_clips(keypoints)
-
 
     cap = cv2.VideoCapture(video_path)
     video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -273,9 +265,7 @@ def get_pose3D(video_path, output_dir):
             str(('%04d'% (idx * 243 + j)))
             plt.savefig(output_dir_3D + str(('%04d'% (idx * 243 + j))) + '_3D.png', dpi=200, format='png', bbox_inches='tight')
             plt.close(fig)
-        
 
-        
     print('Generating 3D pose successful!')
 
     ## all
@@ -313,10 +303,12 @@ def get_pose3D(video_path, output_dir):
         plt.savefig(output_dir_pose + str(('%04d'% i)) + '_pose.png', dpi=200, bbox_inches = 'tight')
         plt.close(fig)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--video', type=str, default='sample_video.mp4', help='input video')
     parser.add_argument('--gpu', type=str, default='0', help='input video')
+    parser.add_argument('--visualize', type=bool, default=False)
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -327,7 +319,8 @@ if __name__ == "__main__":
 
     get_pose2D(video_path, output_dir)
     get_pose3D(video_path, output_dir)
-    img2video(video_path, output_dir)
+
+    if args.visualize:
+        img2video(video_path, output_dir)
+
     print('Generating demo successful!')
-
-
