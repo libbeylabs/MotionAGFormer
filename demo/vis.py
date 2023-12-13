@@ -314,18 +314,18 @@ def get_pose3D(video_path, output_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--video', type=str, default='sample_video.mp4', help='input video')
+    parser.add_argument('--video-path', type=str, default='./demo/video/sample_video.mp4', help='input video path')
+    parser.add_argument('--output-dir', type=str, default='./demo/output/', help='output directory')
     parser.add_argument('--gpu', type=str, default='0', help='input video')
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
-    video_path = './demo/video/' + args.video
-    video_name = video_path.split('/')[-1].split('.')[0]
-    output_dir = './demo/output/' + video_name + '/'
+    video_name = args.video_path.split('/')[-1].split('.')[0]
+    output_dir = args.output_dir + video_name + '/'
 
-    get_pose2D(video_path, output_dir)
-    get_pose3D(video_path, output_dir)
+    get_pose2D(args.video_path, output_dir)
+    get_pose3D(args.video_path, output_dir)
     # img2video(video_path, output_dir)
 
-    print('Generating demo successful!')
+    print('Generated demo successful!')
